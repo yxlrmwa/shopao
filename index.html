@@ -1,0 +1,216 @@
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Quicksand:wght@400;500&display=swap" rel="stylesheet">
+
+<div class="stars" aria-hidden="true"></div>
+
+<!-- LOCK SCREEN -->
+<main id="gate" class="screen">
+  <div class="panel">
+    <p class="hint" id="step">Only we know this one</p>
+    <h1 id="question">When is my Birthday?</h1>
+    <div class="boxes" id="boxes">
+      <label><input inputmode="numeric" maxlength="2" placeholder="00" aria-label="Month"><span>Month</span></label>
+      <i>-</i>
+      <label><input inputmode="numeric" maxlength="2" placeholder="00" aria-label="Day"><span>Day</span></label>
+      <i>-</i>
+      <label><input inputmode="numeric" maxlength="2" placeholder="00" aria-label="Year"><span>Year</span></label>
+    </div>
+    <p class="status" id="status" aria-live="polite">&nbsp;</p>
+  </div>
+</main>
+
+<!-- The letter itself is added by JavaScript only after both locks are opened -->
+<div id="app"></div>
+
+<style>
+:root{
+  --bg1:#1d1233; --bg2:#37235c; --panel:#2a1b49; --line:#5b4590;
+  --text:#e8def8; --soft:#bba9de; --accent:#c9aef2; --ok:#9fd8b4;
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:'Quicksand',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh; font-family:var(--sans); color:var(--text);
+  background:radial-gradient(1200px 700px at 50% -10%,var(--bg2),var(--bg1)) fixed;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0}
+.stars b{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--accent);opacity:.0;animation:tw 6s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:.5;transform:translateY(-14px)}}
+
+.screen{position:relative;z-index:1;min-height:100vh;display:grid;place-items:center;padding:24px;transition:opacity .7s ease,transform .7s ease}
+.screen.out{opacity:0;transform:scale(.97);pointer-events:none}
+.panel{width:min(440px,100%);text-align:center;padding:40px 24px 32px;border:1px solid var(--line);border-radius:28px;
+  background:linear-gradient(160deg,rgba(60,40,100,.55),rgba(36,24,64,.7));backdrop-filter:blur(8px);box-shadow:0 20px 60px rgba(10,4,30,.5)}
+.hint{font-size:.9rem;color:var(--soft);letter-spacing:.04em;margin-bottom:12px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,8vw,2.6rem);line-height:1.15;margin-bottom:30px;color:#f1eafc}
+.boxes{display:flex;justify-content:center;align-items:flex-start;gap:8px}
+.boxes i{font-style:normal;color:var(--soft);padding-top:16px}
+.boxes label{display:flex;flex-direction:column;align-items:center;gap:8px}
+.boxes span{font-size:.75rem;color:var(--soft)}
+.boxes input{
+  width:66px;height:64px;text-align:center;font:500 1.5rem var(--sans);color:var(--text);
+  background:rgba(20,10,40,.45);border:1.5px solid var(--line);border-radius:16px;outline:none;
+  transition:border-color .25s,box-shadow .25s,background .25s;caret-color:var(--accent)
+}
+.boxes input::placeholder{color:#6d5aa0}
+.boxes input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(201,174,242,.18)}
+.boxes input.ok{border-color:var(--ok);background:rgba(159,216,180,.1);color:var(--ok)}
+.boxes input.bad{border-color:#d98fa8;animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.status{margin-top:22px;font-size:.9rem;color:var(--ok);min-height:1.3em;transition:opacity .3s}
+.status.err{color:#e3a5ba}
+
+/* LETTER PAGE */
+#app .page{position:relative;z-index:1;min-height:100vh;padding:56px 18px 90px;display:flex;flex-direction:column;align-items:center;
+  opacity:0;transform:translateY(14px);transition:opacity 1s ease,transform 1s ease}
+#app .page.in{opacity:1;transform:none}
+.page h2{font-family:var(--serif);font-weight:600;font-size:clamp(2.2rem,9vw,3.4rem);text-align:center;color:#f3ecfd;line-height:1.1}
+.page .sub{margin:12px 0 38px;color:var(--soft);text-align:center;font-size:1rem}
+.card{width:min(620px,100%);border:1px solid var(--line);border-radius:26px;overflow:hidden;
+  background:linear-gradient(165deg,#34224f,#291a45);box-shadow:0 24px 60px rgba(10,4,30,.5)}
+.card-head{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:22px 24px;background:none;border:0;
+  color:var(--text);font:600 1.45rem var(--serif);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card-head small{display:block;font:400 .85rem var(--sans);color:var(--soft);margin-top:4px}
+.chev{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:transform .6s cubic-bezier(.4,0,.2,1),background .3s}
+.chev::after{content:"";width:9px;height:9px;border:solid var(--accent);border-width:0 2px 2px 0;transform:translateY(-2px) rotate(45deg)}
+.card.open .chev{transform:rotate(180deg);background:rgba(201,174,242,.12)}
+.fold{display:grid;grid-template-rows:0fr;transition:grid-template-rows .8s cubic-bezier(.4,0,.2,1)}
+.card.open .fold{grid-template-rows:1fr}
+.fold>div{overflow:hidden;min-height:0}
+.letter{padding:6px 26px 34px;opacity:0;transform:translateY(-10px);transition:opacity .6s ease .1s,transform .8s cubic-bezier(.4,0,.2,1)}
+.card.open .letter{opacity:1;transform:none}
+.letter::before{content:"";display:block;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin-bottom:24px}
+.letter p{font-family:var(--serif);font-weight:500;font-size:1.22rem;line-height:1.75;color:var(--text);margin-bottom:1.2em;white-space:pre-line}
+.letter p.big{font-size:1.45rem;font-style:italic;color:#f3ecfd;text-align:center}
+.letter p.end{text-align:center;color:var(--accent);margin-bottom:0}
+.close{display:block;margin:6px auto 0;padding:10px 22px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--soft);font:500 .9rem var(--sans);cursor:pointer}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}html{scroll-behavior:auto}}
+</style>
+
+<script>
+/* ===== SETTINGS: change these if you like ===== */
+const LOCKS = [
+  { question: "When is my Birthday?",     answer: ["09","09","10"], step: "Only we know this one" },
+  { question: "When is our Anniversary?", answer: ["11","16","24"], step: "One more, my love" }
+];
+
+const TITLE = "Happy 2nd Anniversary, my Princess";
+const SUBTITLE = "I made this just for you";
+
+/* Your message. Each line in this list is one paragraph. Add the extra paragraphs I wrote you wherever you like. */
+const MESSAGE = [
+  {t:"Hello there babiii, guess what day is it.. I have alot of things to tell you, but firsttt!!.. I would like to greet this wonderful and the best day ever in my life."},
+  {c:"big", t:"Happy 2nd Anniversary my Princess, my Lady, my Baby, my Babiii, my Lovey, my Wife, my Best Partner, my Madam Baby, my Bossing, my Everything."},
+  {t:"hooo!, okayy.."},
+  {t:"hey there my princess, two years have flown by since we started this journey together, and my heart still races every single time I see a notification of your name that light up my phone screen. You bring a warmth into my world that completely redefines what happiness really means. Every shared laugh, every late night talks, and every little conversations, adventures and discoveries we made together, It is already enough proof to realize that loving you is really are the best thing I've ever did in my entire life."},
+  {t:"I know I told you this alot of times, but just to keep this on your mind baby. I'm so so lucky to have you, I'm so lucky to have you here, baby, I'm so lucky because I have someone to lean onto, to talk about my problems, to listen to my rants, and a someone that is always there for me, and it's no other than you, it's always you, it's always got to be you, no one else."},
+  {t:"Thank you so much for being my safe place, my greatest inspiration, my absolute favorite person to talk to, my best friend, my best partner, my kakampi sa lahatt. Even on ordinary days, just knowing you are by my side makes everything feel so much brighter, lighter and more meaningful. I always cherish the memories we have built so far, and I am endlessly excited for all the chapters yet to come."},
+  {t:"another thing, I want to apologize for all my mistakes babiii, for letting you cry, for hurting you, for leaving you empty handed.. I didn't mean and want any of that thing to happen babiii. I'm so sorry kasi ang tagal tagal ko pong nawala sayo, ang tagal kong nag panggap, and you even learned to just have yourself without having someone to talk to and keeping your problems by yourself, you just cry. Which is one of the reason why I hated myself because I realized that I can really fight for our relationship but I got too scared and given up easily. But cutting the drama's off, Thank you again babiii, because you accepted me and understand me."},
+  {t:"This time, 'broken promises' before was goin to be a 'willed promises', because this time, babawi na po ako sayo, I won't give up that easily this time, and ipaglalaban ko ung dapat na ipaglaban, dahil pareho tayong hindi sanay at hindi kaya na wala ang isa't isa."},
+  {t:"babawi po ako, and I can make sure na this time wla na pong makakapagpahiwalay satin, hndi na po ulit susuko ung best man mo."},
+  {t:"I love you so much,"},
+  {c:"big", t:"You mean the absolute world to me, babiii. I loveeee you more than words could ever possibly capture."},
+  {c:"end", t:"HAPPY 2ND ANNIVERSARY MY ONE AND ONLY PRINCESS.\nILOVEYOUSOMUCHHHHH\nMWUAH MWUAH MWUAH MWUAHH MMMMMWUAHHHH!"}
+];
+/* ============================================== */
+
+// soft floating sparkles
+const sky = document.querySelector('.stars');
+for (let i = 0; i < 22; i++) {
+  const s = document.createElement('b');
+  s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*6}s;animation-duration:${5+Math.random()*5}s`;
+  sky.appendChild(s);
+}
+
+const gate = document.getElementById('gate');
+const qEl = document.getElementById('question');
+const stepEl = document.getElementById('step');
+const statusEl = document.getElementById('status');
+const inputs = [...document.querySelectorAll('#boxes input')];
+let level = 0, busy = false;
+
+function setStatus(msg, err){ statusEl.textContent = msg || '\u00a0'; statusEl.classList.toggle('err', !!err); }
+
+function loadLevel(){
+  qEl.textContent = LOCKS[level].question;
+  stepEl.textContent = LOCKS[level].step;
+  inputs.forEach(i => { i.value=''; i.disabled=false; i.className=''; });
+  setStatus('');
+  busy = false;
+  inputs[0].focus();
+}
+
+inputs.forEach((inp, idx) => {
+  inp.addEventListener('input', () => {
+    if (busy) return;
+    inp.value = inp.value.replace(/\D/g,'').slice(0,2);
+    inp.classList.remove('bad');
+    if (inp.value.length < 2) return;
+
+    if (inp.value === LOCKS[level].answer[idx]) {
+      inp.classList.add('ok');
+      inp.disabled = true;
+      setStatus('✓ Correct');
+      const next = inputs[idx+1];
+      if (next) next.focus(); else solved();
+    } else {
+      inp.classList.add('bad');
+      setStatus('Not quite, try again', true);
+      setTimeout(() => { inp.value=''; inp.classList.remove('bad'); inp.focus(); }, 450);
+    }
+  });
+  inp.addEventListener('keydown', e => {
+    // backspace on an empty box jumps back to the previous (unlocked) box
+    if (e.key === 'Backspace' && !inp.value && idx > 0 && !inputs[idx-1].disabled) inputs[idx-1].focus();
+  });
+});
+
+function solved(){
+  busy = true;
+  setStatus('✓ All correct');
+  setTimeout(() => {
+    if (level < LOCKS.length - 1) { level++; loadLevel(); }
+    else openLetter();
+  }, 900);
+}
+
+function openLetter(){
+  gate.classList.add('out');
+  setTimeout(() => {
+    gate.remove();
+    const app = document.getElementById('app');
+    app.innerHTML = `
+      <section class="page">
+        <h2></h2><p class="sub"></p>
+        <article class="card" id="card">
+          <button class="card-head" aria-expanded="false" aria-controls="fold">
+            <span>A letter for you<small>Tap to unfold</small></span><span class="chev"></span>
+          </button>
+          <div class="fold" id="fold"><div><div class="letter"></div></div></div>
+        </article>
+      </section>`;
+    const page = app.querySelector('.page');
+    page.querySelector('h2').textContent = TITLE;
+    page.querySelector('.sub').textContent = SUBTITLE;
+    const letter = page.querySelector('.letter');
+    MESSAGE.forEach(m => { const p = document.createElement('p'); if (m.c) p.className = m.c; p.textContent = m.t; letter.appendChild(p); });
+    const btn = document.createElement('button'); btn.className = 'close'; btn.textContent = 'Fold letter'; letter.appendChild(btn);
+
+    const card = page.querySelector('#card'), head = card.querySelector('.card-head'), hint = head.querySelector('small');
+    const toggle = open => {
+      card.classList.toggle('open', open);
+      head.setAttribute('aria-expanded', open);
+      hint.textContent = open ? 'Tap to fold' : 'Tap to unfold';
+      if (open) setTimeout(() => card.scrollIntoView({behavior:'smooth', block:'start'}), 120);
+    };
+    head.addEventListener('click', () => toggle(!card.classList.contains('open')));
+    btn.addEventListener('click', () => { toggle(false); window.scrollTo({top:0, behavior:'smooth'}); });
+    requestAnimationFrame(() => requestAnimationFrame(() => page.classList.add('in')));
+  }, 700);
+}
+
+loadLevel();
+</script>
